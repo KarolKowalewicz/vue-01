@@ -1,111 +1,62 @@
 <script setup>
-import { computed, ref } from 'vue'
-
-const books = ref([])
-const currentPage = ref(1)
-const allPages = computed(() => Math.ceil(books.value.length / 100))
-const visiblePages = computed(() => {
-  const startPage = Math.max(1, currentPage.value - 5)
-  const endPage = Math.min(allPages.value, currentPage.value + 5)
-  return Array.from(Array(endPage - startPage + 1), (_, i) => startPage + i)
-})
-
-const booksFromPage = computed(() =>
-  books.value.slice((currentPage.value - 1) * 100, (currentPage.value - 1) * 100 + 99)
-)
-
-function fetchBooks() {
-  fetch(`https://wolnelektury.pl/api/books`)
-    .then((response) => {
-      return response.json()
-    })
-    .then((body) => {
-      books.value = body
-    })
+import { ref } from "vue";
+import { StarIcon } from "@heroicons/vue/24/solid";
+import { items } from "./movies.json";
+const movies = ref(items);
+function updateRating(movieIndex, rating) {
+  movies.value[movieIndex].rating = rating;
 }
-
-function changePage(pageNum) {
-  currentPage.value = pageNum
-}
-
-function prevPage() {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
-
-function nextPage() {
-  if (currentPage.value < allPages.value) {
-    currentPage.value++
-  }
-}
-
-fetchBooks()
 </script>
 
 <template>
-  <div class="container">
-    <h1>Najlepszy katalog Ksiażek ever</h1>
-    <div class="pagination">
-      <span @click="prevPage">&lt;&lt;&lt;</span>
-      <template v-for="pageNum in visiblePages" :key="pageNum">
-        <p @click="changePage(pageNum)" :class="{ active: pageNum === currentPage }">
-          &nbsp;{{ pageNum }}&nbsp;
-        </p>
-      </template>
-      <span @click="nextPage">&gt;&gt;&gt;</span>
-    </div>
+  <div class="app">
+    <div class="movie-list">
+      <div
+        class="movie-item"
+        v-for="(movie, movieIndex) in movies"
+        :key="movie.id"
+      >
+        <div class="movie-item-image-wrapper">
+          <img :src="movie.image" class="movie-item-image" alt="" />
+        </div>
 
-    <div class="grid">
-      <div v-for="(book, idx) in booksFromPage" :key="book.slug">
-        <div class="book-item">
-          <h4>{{ idx + 1 + (currentPage - 1) * 100 }}</h4>
-          <h3>{{ book.title }}</h3>
-          <h4>{{ book.author }}</h4>
-          <h5 class="genre">{{ book.genre }}</h5>
-          <img v-bind:src="`https://wolnelektury.pl/media/${book.cover_thumb}`" />
-          <img v-if="book.has_audio" src="./components/icons/headphone.png" />
-          <img v-else src="./components/icons/headphoneno.png" />
+        <div class="movie-item-content-wrapper">
+          <div class="movie-item-title-wrapper">
+            <h3 class="movie-item-title">{{ movie.name }}</h3>
+            <div class="movie-item-genres-wrapper">
+              <span
+                v-for="genre in movie.genres"
+                :key="`${movie.id}-${genre}`"
+                class="movie-item-genre-tag"
+                >{{ genre }}</span
+              >
+            </div>
+          </div>
+          <div class="movie-item-description-wrapper">
+            <p class="movie-item-description">{{ movie.description }}</p>
+          </div>
+          <div class="movie-item-rating-wrapper">
+            <span class="movie-item-rating-text">
+              Rating: ({{ movie.rating }}/5)
+            </span>
+
+            <div class="movie-item-star-icon-wrapper">
+              <button
+                v-for="star in 5"
+                :key="star"
+                class="movie-item-star-icon-button"
+                :class="[
+                  star <= movie.rating ? 'text-yellow-500' : 'text-gray-500',
+                ]"
+                :disabled="star === movie.rating"
+                @click="updateRating(movieIndex, star)"
+              >
+                <StarIcon class="movie-item-star-icon" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
-
-<style>
-.container {
-  margin: 0 auto;
-  max-width: 1200px;
-}
-.pagination {
-  list-style: none;
-  display: flex;
-  justify-content: center;
-}
-
-.pagination li {
-  cursor: pointer;
-}
-
-.pagination li:hover {
-  color: #fff;
-}
-
-.pagination li.active {
-  color: #fff;
-  font-weight: bold;
-  margin: 0 auto;
-}
-.grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 30px;
-}
-.book-item {
-  margin: 0 auto;
-}
-.genre {
-  color: blue;
-}
-</style>
