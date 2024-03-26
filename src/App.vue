@@ -35,7 +35,8 @@ function updateRating(movieIndex, rating) {
           <div class="movie-item-description-wrapper">
             <p class="movie-item-description">{{ movie.description }}</p>
           </div>
-          <div class="movie-item-rating-wrapper">
+          <div>
+            <div  class="movie-item-rating-wrapper"></div>
             <span class="movie-item-rating-text">
               Rating: ({{ movie.rating }}/5)
             </span>
